@@ -1,0 +1,40 @@
+# Simulation outputs
+*.vvp
+*.vcd
+*.out
+sim/out
+sim/out_*
+sim/wave.vcd
+sim/quick
+sim/debug*
+sim/mext
+sim/simv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# FreeRTOS build artifacts
+freertos/build/
+freertos/sim/*.vvp
+freertos/sim/*.vcd
+freertos/sim/sim_*.txt
+freertos/sim/out_*
+
+# Vivado project (regenerate with scripts)
+fpga/vivado_project/
+*.jou
+*.log
+*.backup.*
+*.wpc
+*.wdf
+*.db
+
+# Hex files (generated, not source)
+inst_mem.hex
+*.hex
+!tests/sw/*.py
+
+# OS files
+.DS_Store
+Thumbs.db
