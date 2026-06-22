@@ -1,0 +1,1 @@
+-log "elaborate.log" -debug "all" "tb_soc" -s "sim_snapshot" 

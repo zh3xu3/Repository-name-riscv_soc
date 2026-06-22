@@ -67,6 +67,9 @@ module icache #(
     localparam INDEX_BITS  = $clog2(LINES);                // 7 for 128 lines
     localparam TAG_BITS    = 32 - INDEX_BITS - OFFSET_BITS; // 21 for default
 
+    // Register base address
+    localparam [31:0] REG_BASE = 32'h0000_9000;
+
     // Address field extraction macros
     wire [OFFSET_BITS-1:0] addr_offset = cpu_addr[OFFSET_BITS-1:0];
     wire [INDEX_BITS-1:0]  addr_index  = cpu_addr[INDEX_BITS+OFFSET_BITS-1:OFFSET_BITS];
@@ -185,8 +188,9 @@ module icache #(
                     state_next = ST_COMPARE;
                 end else if (cpu_re && !enabled) begin
                     // Bypass: pass-through to memory
-                    mem_addr = cpu_addr;
-                    mem_re   = 1'b1;
+                    mem_addr  = cpu_addr;
+                    mem_re    = 1'b1;
+                    cpu_rdata = mem_rdata;  // Pass memory data directly to CPU
                 end
             end
 
@@ -316,7 +320,6 @@ module icache #(
     // =========================================================================
     // Bus interface: read-only registers at 0x0000_9000
     // =========================================================================
-    localparam [31:0] REG_BASE = 32'h0000_9000;
 
     always @(*) begin
         bus_rdata = 32'b0;

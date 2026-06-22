@@ -1,0 +1,32 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "D:/fpga/2025.2/Vivado/data/rsb/busdef" \
+"../../../../../../rtl/core/alu.v" \
+"../../../../../../rtl/core/branch_comp.v" \
+"../../../../../../rtl/core/branch_pred.v" \
+"../../../../../../rtl/core/control.v" \
+"../../../../../../rtl/core/csr.v" \
+"../../../../../../rtl/mem/data_mem.v" \
+"../../../../../../rtl/core/divider.v" \
+"../../../../../../rtl/periph/dma.v" \
+"../../../../../../rtl/periph/gpio.v" \
+"../../../../../../rtl/periph/i2c.v" \
+"../../../../../../rtl/mem/icache.v" \
+"../../../../../../rtl/core/imm_gen.v" \
+"../../../../../../rtl/mem/inst_mem.v" \
+"../../../../../../rtl/periph/plic.v" \
+"../../../../../../rtl/periph/pwm.v" \
+"../../../../../../rtl/core/reg_file.v" \
+"../../../../../../rtl/core/riscv_core.v" \
+"../../../../../../rtl/soc_top.v" \
+"../../../../../../rtl/periph/spi.v" \
+"../../../../../../rtl/periph/uart.v" \
+"../../../../../../rtl/periph/uart_rx.v" \
+"../../../../../../rtl/periph/uart_tx.v" \
+"../../../../../../rtl/periph/wdt.v" \
+"../../../../../tb_soc.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
