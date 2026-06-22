@@ -199,6 +199,7 @@ module soc_top #(
   wire dma_stall       = cpu_dmem_active && dma_active;
 
   // Mux data_mem access between CPU and DMA
+  // When CPU is active, DMA access is blocked (dma_stall)
   wire [31:0] dmem_actual_addr  = dma_active && !cpu_dmem_active ? dma_mem_addr  : dmem_addr;
   wire [31:0] dmem_actual_wdata = dma_active && !cpu_dmem_active ? dma_mem_wdata : dmem_wdata;
   wire        dmem_actual_we    = dma_active && !cpu_dmem_active ? dma_mem_we    : (dmem_we && sel_dmem);
@@ -316,6 +317,8 @@ module soc_top #(
     .mem_rdata(dma_mem_rdata),
     .mem_we   (dma_mem_we),
     .mem_re   (dma_mem_re),
+    // Stall signal from arbiter
+    .mem_stall(dma_stall),
     // Interrupt
     .dma_irq  (dma_irq)
   );

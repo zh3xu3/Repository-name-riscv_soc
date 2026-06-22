@@ -106,6 +106,16 @@ module tb_new_peripherals;
   endtask
 
   // ================================================================
+  // Debug: Monitor DMA signals
+  // ================================================================
+  always @(posedge clk) begin
+    if (u_dut.dma_active) begin
+      $display("[%0t] DMA active: addr=0x%08h, we=%b, re=%b, stall=%b",
+               $time, u_dut.dma_mem_addr, u_dut.dma_mem_we, u_dut.dma_mem_re, u_dut.dma_stall);
+    end
+  end
+
+  // ================================================================
   // Main Test Sequence
   // ================================================================
   initial begin

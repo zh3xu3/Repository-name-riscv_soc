@@ -23,6 +23,8 @@ module dma (
     input  wire [31:0] mem_rdata,
     output reg         mem_we,
     output reg         mem_re,
+    // Stall signal from arbiter
+    input  wire        mem_stall,
     // Interrupt
     output wire        dma_irq
 );
@@ -64,9 +66,9 @@ module dma (
                         (ctrl_width == 2'd1) ? 4'b0011 :  // half
                                                4'b1111;   // word
 
-  wire [1:0] size_shift = (ctrl_width == 2'd0) ? 2'd1 :  // 1 byte
-                           (ctrl_width == 2'd1) ? 2'd2 :  // 2 bytes
-                                                  2'd4;   // 4 bytes
+  wire [2:0] size_shift = (ctrl_width == 2'd0) ? 3'd1 :  // 1 byte
+                           (ctrl_width == 2'd1) ? 3'd2 :  // 2 bytes
+                                                  3'd4;   // 4 bytes
 
   // ---- Bus register write ----
   always @(posedge clk or negedge rst_n) begin
@@ -142,55 +144,68 @@ module dma (
       mem_we <= 1'b0;
       mem_re <= 1'b0;
 
-      case (state)
-        IDLE: begin
-          if (ctrl_start && trans_len != 32'h0) begin
-            status_busy     <= 1'b1;
-            status_done     <= 1'b0;
-            status_error    <= 1'b0;
-            bytes_remaining <= trans_len;
-            cur_src         <= src_addr;
-            cur_dst         <= dst_addr;
-            state           <= FETCH;
-          end
-        end
-
-        FETCH: begin
-          // Issue read from source
+      // If DMA is stalled by CPU, hold state and re-issue memory request
+      if (mem_stall) begin
+        // Re-issue the memory request next cycle
+        if (state == FETCH) begin
           mem_addr <= cur_src;
           mem_re   <= 1'b1;
-          // Move to WRITE next cycle (mem_rdata available)
-          state    <= WRITE;
-        end
-
-        WRITE: begin
-          // Latch fetched data and write to destination
-          fetch_data <= mem_rdata;
+        end else if (state == WRITE) begin
           mem_addr   <= cur_dst;
-          mem_wdata  <= mem_rdata;
+          mem_wdata  <= fetch_data;
           mem_we     <= 1'b1;
-
-          // Advance pointers
-          cur_src         <= cur_src + {30'h0, size_shift};
-          cur_dst         <= cur_dst + {30'h0, size_shift};
-          bytes_remaining <= bytes_remaining - {30'h0, size_shift};
-
-          // Check completion
-          if (bytes_remaining <= {30'h0, size_shift}) begin
-            state <= DONE;
-          end else begin
-            state <= FETCH;
+        end
+      end else begin
+        case (state)
+          IDLE: begin
+            if (ctrl_start && trans_len != 32'h0) begin
+              status_busy     <= 1'b1;
+              status_done     <= 1'b0;
+              status_error    <= 1'b0;
+              bytes_remaining <= trans_len;
+              cur_src         <= src_addr;
+              cur_dst         <= dst_addr;
+              state           <= FETCH;
+            end
           end
-        end
 
-        DONE: begin
-          status_busy <= 1'b0;
-          status_done <= 1'b1;
-          state       <= IDLE;
-        end
+          FETCH: begin
+            // Issue read from source
+            mem_addr <= cur_src;
+            mem_re   <= 1'b1;
+            // Move to WRITE next cycle (mem_rdata available)
+            state    <= WRITE;
+          end
 
-        default: state <= IDLE;
-      endcase
+          WRITE: begin
+            // Latch fetched data and write to destination
+            fetch_data <= mem_rdata;
+            mem_addr   <= cur_dst;
+            mem_wdata  <= mem_rdata;
+            mem_we     <= 1'b1;
+
+            // Advance pointers
+            cur_src         <= cur_src + {29'h0, size_shift};
+            cur_dst         <= cur_dst + {29'h0, size_shift};
+            bytes_remaining <= bytes_remaining - {29'h0, size_shift};
+
+            // Check completion
+            if (bytes_remaining <= {29'h0, size_shift}) begin
+              state <= DONE;
+            end else begin
+              state <= FETCH;
+            end
+          end
+
+          DONE: begin
+            status_busy <= 1'b0;
+            status_done <= 1'b1;
+            state       <= IDLE;
+          end
+
+          default: state <= IDLE;
+        endcase
+      end
     end
   end
 
