@@ -13,7 +13,7 @@ C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/core/reg_file.v,17
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/core/riscv_core.v,1782148414,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/data_mem.v,,riscv_core,,,,,,,,
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/data_mem.v,1782147451,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/icache.v,,data_mem,,,,,,,,
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/icache.v,1782149751,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/inst_mem.v,,icache,,,,,,,,
-C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/inst_mem.v,1782149701,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/dma.v,,inst_mem,,,,,,,,
+C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/mem/inst_mem.v,1782149776,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/dma.v,,inst_mem,,,,,,,,
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/dma.v,1782148528,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/gpio.v,,dma,,,,,,,,
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/gpio.v,1782147451,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/i2c.v,,gpio,,,,,,,,
 C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/i2c.v,1782148885,verilog,,C:/Users/zzw/AppData/Local/Temp/Repository-name-riscv_soc/rtl/periph/plic.v,,i2c,,,,,,,,
