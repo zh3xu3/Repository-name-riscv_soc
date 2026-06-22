@@ -57,7 +57,7 @@ module riscv_core (
     .inst         (imem_rdata),
     .pred_taken   (pred_taken),
     .pred_target  (pred_target),
-    .update_en    (is_btype || is_jal),
+    .update_en    ((is_btype || is_jal) && !stall),
     .update_taken (branch_taken_w),
     .update_pc    (ifid_pc),
     .update_target(branch_target_w)
@@ -585,7 +585,7 @@ module riscv_core (
   wire [31:0] csr_wdata = (memwb_csr_op[2]) ? {27'h0, csr_rs1_fwd[4:0]} : csr_rs1_fwd;
 
   // CSR write: CSRRW always writes, CSRRS/CSRRC write if rs1 != x0
-  wire csr_we = memwb_is_system &&
+  wire csr_we = memwb_is_system && !irq_trap &&
                 ((memwb_csr_op == 3'b001) ||  // CSRRW
                  ((memwb_csr_op == 3'b010 || memwb_csr_op == 3'b011) &&
                   (memwb_rs1 != 5'h0)));  // CSRRS/CSRRC only if rs1 field != 0

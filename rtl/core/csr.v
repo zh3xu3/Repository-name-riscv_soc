@@ -89,7 +89,7 @@ module csr (
                         (mie[11] && mip[11]));   // External
 
   // Trap handler address
-  assign mtvec_out = mtvec;
+  assign mtvec_out = {mtvec[31:2], 2'b00};
   assign mepc_out  = mepc;
   assign mie_out     = mie;
   assign mstatus_mie = mstatus[3];
@@ -160,11 +160,46 @@ module csr (
             default: mstatus <= wdata;
           endcase
         end
-        CSR_MIE:         mie      <= wdata;
-        CSR_MTVEC:       mtvec    <= wdata;
-        CSR_MSCRATCH:    mscratch <= wdata;
-        CSR_MEPC:        mepc     <= wdata;
-        CSR_MCAUSE:      mcause   <= wdata;
+        CSR_MIE: begin
+          case (csr_op)
+            3'b001:  mie      <= wdata;              // CSRRW
+            3'b010:  mie      <= rdata | wdata;      // CSRRS
+            3'b011:  mie      <= rdata & ~wdata;     // CSRRC
+            default: mie      <= wdata;
+          endcase
+        end
+        CSR_MTVEC: begin
+          case (csr_op)
+            3'b001:  mtvec    <= wdata;
+            3'b010:  mtvec    <= rdata | wdata;
+            3'b011:  mtvec    <= rdata & ~wdata;
+            default: mtvec    <= wdata;
+          endcase
+        end
+        CSR_MSCRATCH: begin
+          case (csr_op)
+            3'b001:  mscratch <= wdata;
+            3'b010:  mscratch <= rdata | wdata;
+            3'b011:  mscratch <= rdata & ~wdata;
+            default: mscratch <= wdata;
+          endcase
+        end
+        CSR_MEPC: begin
+          case (csr_op)
+            3'b001:  mepc     <= wdata;
+            3'b010:  mepc     <= rdata | wdata;
+            3'b011:  mepc     <= rdata & ~wdata;
+            default: mepc     <= wdata;
+          endcase
+        end
+        CSR_MCAUSE: begin
+          case (csr_op)
+            3'b001:  mcause   <= wdata;
+            3'b010:  mcause   <= rdata | wdata;
+            3'b011:  mcause   <= rdata & ~wdata;
+            default: mcause   <= wdata;
+          endcase
+        end
         CSR_MTIMECMP_LO: mtimecmp[31:0]  <= wdata;
         CSR_MTIMECMP_HI: mtimecmp[63:32] <= wdata;
         default: ;
