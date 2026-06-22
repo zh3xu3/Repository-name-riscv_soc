@@ -1,30 +1,30 @@
 # RISC-V SoC — RV32IM 5-Stage Pipelined Soft-Core Processor
 
-A complete RISC-V RV32IM SoC implemented in Verilog, targeting Xilinx Artix-7 FPGA. Features a 5-stage pipeline with branch prediction, machine-mode interrupts, and a full peripheral subsystem (GPIO, UART, SPI, PWM, PLIC). Successfully runs FreeRTOS.
+A complete RISC-V RV32IM SoC implemented in Verilog, targeting Xilinx Artix-7 FPGA. Features a 5-stage pipeline with branch prediction, machine-mode interrupts, and a full peripheral subsystem (GPIO, UART, SPI, PWM, PLIC, DMA, I-Cache, I2C). Successfully runs FreeRTOS.
 
 **22/22 tests passing** — verified with iverilog and Vivado xsim.
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                         soc_top                              │
-│  ┌──────────────┐  ┌───────────┐  ┌──────────────┐          │
-│  │  riscv_core  │  │ inst_mem  │  │   data_mem   │          │
-│  │  ┌────────┐  │  │  (4KB)    │  │   (4KB)      │          │
-│  │  │IF/ID/EX│  │  └───────────┘  └──────────────┘          │
-│  │  │MEM/WB  │  │                                            │
-│  │  │  ALU   │  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐    │
-│  │  │  MUL   │  │  │ UART │ │ GPIO │ │ SPI  │ │ PWM  │    │
-│  │  │  DIV   │  │  │(TX/RX)│ │(32b) │ │(Mstr)│ │(4ch) │    │
-│  │  │  CSR   │  │  └──────┘ └──────┘ └──────┘ └──────┘    │
-│  │  │  RF    │  │                                            │
-│  │  │  BHT   │  │  ┌──────┐ ┌──────────────────────┐       │
-│  │  │  BTB   │  │  │ WDT  │ │  PLIC (16 sources)   │       │
-│  │  └────────┘  │  └──────┘ └──────────────────────┘       │
-│  └──────────────┘                                            │
-│                    Address Decoder (bus)                      │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                               soc_top                                    │
+│  ┌──────────────┐  ┌───────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  riscv_core  │  │  I-Cache  │  │   data_mem   │  │     DMA      │   │
+│  │  ┌────────┐  │  │  (2KB)    │  │   (4KB)      │  │  (mem2mem)   │   │
+│  │  │IF/ID/EX│  │  └─────┬─────┘  └──────────────┘  └──────────────┘   │
+│  │  │MEM/WB  │  │        │                                              │
+│  │  │  ALU   │  │  ┌─────┴─────┐                                        │
+│  │  │  MUL   │  │  │ inst_mem  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ │
+│  │  │  DIV   │  │  │  (4KB)    │  │ UART │ │ GPIO │ │ SPI  │ │ PWM  │ │
+│  │  │  CSR   │  │  └───────────┘  └──────┘ └──────┘ └──────┘ └──────┘ │
+│  │  │  RF    │  │                                                       │
+│  │  │  BHT   │  │  ┌──────┐ ┌──────┐ ┌──────────────────────┐         │
+│  │  │  BTB   │  │  │ WDT  │ │ I2C  │ │  PLIC (16 sources)   │         │
+│  │  └────────┘  │  └──────┘ └──────┘ └──────────────────────┘         │
+│  └──────────────┘                                                       │
+│                         Address Decoder (bus)                            │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Pipeline Stages
@@ -80,9 +80,13 @@ MUL, MULH, MULHSU, MULHU, DIV, DIVU, REM, REMU
 | `0x0000_1000 – 0x0000_1FFF` | Data Memory (4KB) |
 | `0x0000_2000 – 0x0000_200F` | UART (TX data, RX data, status, baud) |
 | `0x0000_3000 – 0x0000_300F` | GPIO (output, input, direction) |
+| `0x0000_4000 – 0x0000_400F` | WDT (kick, timeout, status) |
 | `0x0000_5000 – 0x0000_500F` | SPI Master (data, ctrl, status, CS) |
 | `0x0000_6000 – 0x0000_601F` | PWM (ctrl, period, duty0-3, count) |
 | `0x0000_7000 – 0x0000_703F` | PLIC (pending, enable, threshold, claim) |
+| `0x0000_8000 – 0x0000_801F` | DMA (ctrl, src, dst, len, status) |
+| `0x0000_9000 – 0x0000_900F` | I-Cache (ctrl, status, hit/miss counters) |
+| `0x0000_A000 – 0x0000_A01F` | I2C Master (ctrl, status, data, addr) |
 
 ## Directory Structure
 
@@ -101,7 +105,8 @@ riscv_soc/
 │   │   └── riscv_core.v     # Pipeline top-level (IF/ID/EX/MEM/WB + forwarding)
 │   ├── mem/
 │   │   ├── inst_mem.v       # Instruction memory (async read, $readmemh)
-│   │   └── data_mem.v       # Data memory (sync write, async read, byte/half/word)
+│   │   ├── data_mem.v       # Data memory (sync write, async read, byte/half/word)
+│   │   └── icache.v         # 2KB direct-mapped instruction cache
 │   ├── periph/
 │   │   ├── gpio.v           # GPIO controller (32-bit in/out)
 │   │   ├── uart.v           # UART top (TX + RX + baud gen)
@@ -110,7 +115,9 @@ riscv_soc/
 │   │   ├── spi.v            # SPI master (CPOL/CPHA, 8-bit shift)
 │   │   ├── pwm.v            # PWM controller (4 channels)
 │   │   ├── plic.v           # PLIC (16 sources, priority/threshold)
-│   │   └── wdt.v            # Watchdog timer
+│   │   ├── wdt.v            # Watchdog timer
+│   │   ├── dma.v            # DMA controller (mem2mem/periph2mem)
+│   │   └── i2c.v            # I2C master (7-bit addr, 100/400kHz)
 │   └── soc_top.v            # SoC top-level (core + mem + periph + bus decoder)
 ├── sim/
 │   ├── tb_soc.v             # Full SoC testbench (22 tests)
@@ -122,7 +129,8 @@ riscv_soc/
 │   └── sw/
 │       ├── gen_uart_gpio.py  # Main test generator (GPIO/UART/RV32I/RV32M/SPI/PWM/PLIC/Timer)
 │       ├── gen_hex.py        # Phase 1+2+3 test generator
-│       └── gen_rv32i_ext.py  # Extended RV32I test generator
+│       ├── gen_rv32i_ext.py  # Extended RV32I test generator
+│       └── gen_new_peripherals.py  # DMA/I-Cache/I2C test generator
 ├── freertos/                 # FreeRTOS RV32 port
 ├── fpga/
 │   ├── fpga_top.v            # FPGA top-level wrapper
@@ -210,6 +218,12 @@ gtkwave sim/wave.vcd &
 4. **`memwb_reg_wr` for forwarding during traps**: `wb_we` is suppressed by `!irq_trap` during trap entry, but load results must still forward. Using `memwb_reg_wr` ensures correct forwarding.
 
 5. **Iterative divider with 2-cycle freeze**: The 32-cycle shift-subtract divider freezes the entire pipeline. After `div_done`, a 2-cycle freeze counter holds EX/MEM so the result propagates before the bubble overwrites it.
+
+6. **I-Cache**: 2KB direct-mapped cache with 16-byte lines. Reduces instruction fetch latency for repeated access patterns. Includes hit/miss performance counters.
+
+7. **DMA controller**: Supports mem2mem transfers with configurable width (byte/half/word). CPU has priority over DMA for memory access. Completion interrupt available.
+
+8. **I2C master**: Supports 7-bit addressing at 100kHz/400kHz. Includes TX/RX FIFOs (depth 16) and interrupt support for transfer completion, NACK, and arbitration loss.
 
 ## Target FPGA
 
