@@ -109,12 +109,16 @@ module soc_top #(
     .wdt_rst (wdt_rst)
   );
 
+  // I-Cache stall signal (declared before use)
+  wire        icache_cpu_stall;
+
   // RISC-V Core (reset by external reset OR watchdog timeout)
   riscv_core u_core (
     .clk        (clk),
     .rst_n      (sys_rst_n),
     .imem_addr  (imem_addr),
     .imem_rdata (imem_rdata),
+    .imem_stall (icache_cpu_stall),
     .dmem_addr  (dmem_addr),
     .dmem_wdata (dmem_wdata),
     .dmem_rdata (dmem_rdata),
@@ -156,6 +160,7 @@ module soc_top #(
     .cpu_rdata (imem_rdata),
     .cpu_re    (1'b1),               // CPU always fetching
     .cpu_hit   (icache_cpu_hit),
+    .cpu_stall (icache_cpu_stall),
     // Memory interface
     .mem_addr  (icache_mem_addr),
     .mem_rdata (icache_mem_rdata),

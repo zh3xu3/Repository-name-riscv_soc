@@ -6,6 +6,7 @@ module riscv_core (
     input  wire        rst_n,
     output wire [31:0] imem_addr,
     input  wire [31:0] imem_rdata,
+    input  wire        imem_stall,
     output wire [31:0] dmem_addr,
     output wire [31:0] dmem_wdata,
     input  wire [31:0] dmem_rdata,
@@ -256,9 +257,9 @@ module riscv_core (
                             fwd_mem_rs2    ? wb_data          :
                             id_rs2_data_rf;
 
-  // Hazard detection: load-use stall + EX-to-ID load stall for branches
+  // Hazard detection: load-use stall + EX-to-ID load stall for branches + I-Cache miss stall
   wire       div_freeze = |div_freeze_cnt;
-  assign stall = div_busy || div_starting ||
+  assign stall = div_busy || div_starting || imem_stall ||
                  (idex_mem_rd && (idex_rd != 5'h0) &&
                   ((idex_rd == id_rs1) || (idex_rd == id_rs2)));
 

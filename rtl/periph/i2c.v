@@ -53,6 +53,7 @@ module i2c (
   reg        arb_lost;
   reg        ack_err;
   reg        done;
+  reg        stop_pending;  // Latched stop request (persists until STOP state uses it)
 
   // Clock enable (center of SCL low/high)
   wire clk_en = (clk_cnt == divider[15:1]);
@@ -74,6 +75,7 @@ module i2c (
       ctrl_irq_en  <= 1'b0;
       data_reg     <= 8'h00;
       divider      <= 16'h0000;
+      stop_pending <= 1'b0;
     end else begin
       // Auto-clear start/stop
       if (ctrl_start) ctrl_start <= 1'b0;
@@ -87,6 +89,7 @@ module i2c (
             ctrl_stop   <= bus_wdata[2];
             ctrl_ack    <= bus_wdata[3];
             ctrl_irq_en <= bus_wdata[4];
+            if (bus_wdata[2]) stop_pending <= 1'b1;
           end
           4'h8: data_reg  <= bus_wdata[7:0]; // DATA
           4'hC: divider   <= bus_wdata[15:0]; // DIVIDER
@@ -114,17 +117,18 @@ module i2c (
   // ---- I2C state machine ----
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      state     <= IDLE;
-      busy      <= 1'b0;
-      ack_rx    <= 1'b0;
-      arb_lost  <= 1'b0;
-      ack_err   <= 1'b0;
-      done      <= 1'b0;
-      scl_out   <= 1'b1;
-      sda_out   <= 1'b1;
-      shift_reg <= 8'h00;
-      bit_cnt   <= 4'h0;
-      clk_cnt   <= 16'h0;
+      state        <= IDLE;
+      busy         <= 1'b0;
+      ack_rx       <= 1'b0;
+      arb_lost     <= 1'b0;
+      ack_err      <= 1'b0;
+      done         <= 1'b0;
+      scl_out      <= 1'b1;
+      sda_out      <= 1'b1;
+      shift_reg    <= 8'h00;
+      bit_cnt      <= 4'h0;
+      clk_cnt      <= 16'h0;
+      stop_pending <= 1'b0;
     end else begin
       // Default
       done <= 1'b0;
@@ -195,9 +199,10 @@ module i2c (
               ack_rx  <= ~sda_i; // ACK is low
               ack_err <= sda_i;  // NACK is high (error)
             end else begin // Falling edge
-              if (ctrl_stop) begin
+              if (stop_pending) begin
                 state   <= STOP;
                 clk_cnt <= 16'h0;
+                stop_pending <= 1'b0;
               end else begin
                 state   <= DATA;
                 bit_cnt <= 4'd7;

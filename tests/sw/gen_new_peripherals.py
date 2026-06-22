@@ -161,8 +161,8 @@ prog.append((0x044, encode_i(0x100, 1, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x1100
 prog.append((0x048, encode_s(0x04, 1, 29, F3_SW, OP_S)))        # DMA_SRC_ADDR = 0x1100
 
 # DMA_DST_ADDR = 0x1200
-prog.append((0x04C, encode_i(0x200, 0, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x200
-prog.append((0x050, encode_u(0x1, 1, OP_LUI)))                  # x1 += 0x1000 → 0x1200
+prog.append((0x04C, encode_u(0x1, 1, OP_LUI)))                  # x1 = 0x1000
+prog.append((0x050, encode_i(0x200, 1, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x1200
 prog.append((0x054, encode_s(0x08, 1, 29, F3_SW, OP_S)))        # DMA_DST_ADDR = 0x1200
 
 # DMA_TRANS_LEN = 16
@@ -229,8 +229,8 @@ prog.append((0x0E0, encode_i(0, 0, F3_ADD_SUB, 15, OP_I)))      # x15 = 0
 prog.append((0x0E4, encode_u(0x1, 1, OP_LUI)))                  # x1 = 0x1000
 prog.append((0x0E8, encode_i(0x100, 1, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x1100
 prog.append((0x0EC, encode_s(0x04, 1, 29, F3_SW, OP_S)))        # DMA_SRC_ADDR = 0x1100
-prog.append((0x0F0, encode_i(0x200, 0, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x200
-prog.append((0x0F4, encode_u(0x1, 1, OP_LUI)))                  # x1 = 0x1200
+prog.append((0x0F0, encode_u(0x1, 1, OP_LUI)))                  # x1 = 0x1000
+prog.append((0x0F4, encode_i(0x200, 1, F3_ADD_SUB, 1, OP_I)))   # x1 = 0x1200
 prog.append((0x0F8, encode_s(0x08, 1, 29, F3_SW, OP_S)))        # DMA_DST_ADDR = 0x1200
 prog.append((0x0FC, encode_i(8, 0, F3_ADD_SUB, 1, OP_I)))       # x1 = 8
 prog.append((0x100, encode_s(0x0C, 1, 29, F3_SW, OP_S)))        # DMA_TRANS_LEN = 8

@@ -40,6 +40,7 @@ module icache #(
     output reg  [31:0] cpu_rdata,
     input  wire        cpu_re,
     output wire        cpu_hit,            // High when data is available (hit or refill done)
+    output wire        cpu_stall,          // High when cache is fetching (CPU must hold PC)
 
     // Memory interface
     output reg  [31:0] mem_addr,
@@ -141,6 +142,10 @@ module icache #(
     // -------------------------------------------------------------------------
     assign cpu_hit   = (state == ST_COMPARE) & hit |
                        (state == ST_REFILL) & (fetch_cnt == 0);
+
+    // Stall CPU when cache miss is being handled (FETCH or miss in COMPARE)
+    assign cpu_stall = enabled & ((state == ST_FETCH) |
+                       ((state == ST_COMPARE) & ~hit));
 
     assign cache_busy = (state != ST_IDLE) | flushing;
 
